@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{Paper Selection Proposal}
+\date{}
+\author{Team 52}
+\maketitle
+
+\section*{Paper Details}
+\begin{itemize}
+    \item \textbf{Title:} Optimal Deterministic Massively Parallel Connectivity on Forests  
+    \item \textbf{Authors:} Alkida Balliu, Rustam Latypov, Yannic Maus, Dennis Olivetti, Jara Uitto  
+    \item \textbf{Conference/Journal:} ACM-SIAM Symposium on Discrete Algorithms (SODA)  
+    \item \textbf{Year:} 2023  
+    \item \textbf{DOI/Link:} \href{https://doi.org/10.48550/arXiv.2211.03530}{arXiv:2211.03530}  
+\end{itemize}
+
+\section*{Summary}
+The paper addresses the problem of identifying connected components in massive graphs within the Massively Parallel Computation (MPC) model, specifically focusing on forests. Improve existing deterministic approaches, achieving an optimal complexity for forests. The paper also extends its findings to Locally Checkable Labeling (LCL) problems, proving that they can be solved in the same runtime.
+
+\section*{Justification}
+This paper is highly relevant to our project as it provides efficient deterministic algorithms for parallel computing on large-scale graphs, a crucial aspect in network analysis. The proposed techniques can significantly enhance our understanding of low-space MPC algorithms and offer insights into optimizing graph processing tasks in modern computing frameworks.
+
+\section*{Implementation Feasibility}
+\begin{itemize}
+    \item The paper provides detailed algorithmic steps and proofs to guide implementation.
+    \item No explicit implementation is available, so we will develop it manually in \textbf{Python} using Dask which allows simulation of parallel execution via multi-threading and multiprocessing.
+    \item GPU may be used for parallel computation(using CuPy or RAPIDS), especially for large datasets(graphs).
+    \item Synthetic data will be generated to test according to implementation we might go for.
+\end{itemize}
+
+\section*{Team Responsibilities}
+Both team members will work together on all aspects of the project, including understanding the article, implementing the algorithm, generating and testing data sets and writing the final report.
+
+
+\end{document}
