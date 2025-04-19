@@ -1,143 +1,168 @@
-ADA_Project: MAX-ID Solver for Connected Components in Forests
-Project Overview
-This project implements the MAX-ID algorithm as a key component for solving the Connected Components Problem on forests (tree-structured graphs) in a simplified computational model. The algorithm is inspired by the paper Optimal Deterministic Massively Parallel Connectivity on Forests. Our goal is to compute the maximum node ID for each tree in a forest and use this to identify connected components, where each node outputs the maximum ID of its tree to indicate its component. Since the original algorithm is designed for the theoretical Massively Parallel Computation (MPC) model, which is complex to implement practically, we are developing a single-threaded Python simulation to test and validate the algorithm’s logic on synthetic graphs.
+# Project Overview
+
+This project implements the MAX-ID algorithm as a key component for solving the Connected Components Problem on forests (tree-structured graphs) in a simplified computational model. The algorithm is inspired by the paper "Optimal Deterministic Massively Parallel Connectivity on Forests." Our goal is to compute the maximum node ID for each tree in a forest and use this to identify connected components, where each node outputs the maximum ID of its tree to indicate its component.
+
+Since the original algorithm is designed for the theoretical Massively Parallel Computation (MPC) model, which is complex to implement practically, we are developing a single-threaded Python simulation to test and validate the algorithm's logic on synthetic graphs.
+
 The MAX-ID problem involves assigning each node in a tree the maximum node ID within its connected component (tree). By solving MAX-ID, we can solve the Connected Components Problem: nodes with the same maximum ID belong to the same tree. This project focuses on the MAX-ID solver and its application to connected components, ignoring the Locally Checkable Labeling (LCL) aspects of the paper, as they are too complex for our scope.
-Current Progress
+
+## Current Progress
 
 The theoretical framework of the MAX-ID algorithm and its role in solving the Connected Components Problem have been thoroughly studied.
+
 Section 4 of the paper (Data Structures and Techniques) has been summarized, focusing on the CompressLightSubTrees and CompressPaths phases.
-We are implementing modular, testable functions for the MAX-ID solver, including:
+
+Modular, testable functions for the MAX-ID solver are being implemented, including:
+
 Graph representation using adjacency lists.
-CompressLightSubTrees to merge light subtrees based on ( n^{\delta/8} ) thresholds.
+
+CompressLightSubTrees to merge light subtrees based on n^{delta/8} thresholds.
+
 CompressPaths to compress chains of degree-2 nodes.
 
-
 Small-scale unit tests are being developed for compression routines using synthetic tree graphs.
-Debugging efforts are addressing issues like variable shadowing (e.g., next causing TypeError) to ensure correct execution.
 
-Known Limitations (Current Stage)
+
+## Known Limitations
 
 The original algorithm assumes the MPC model, which requires independent machines with synchronized rounds and no shared memory. Implementing a true MPC model is infeasible on a single machine or cluster (no GPU or multi-threading is used), so we simulate the algorithm sequentially in Python.
+
 The MAX-ID solver is designed for trees, not general graphs, limiting its applicability to forests.
+
 Compression phase correctness is still being verified through synthetic test graphs (e.g., paths and stars).
+
 Large-scale testing is pending until the core algorithm is stable.
+
 The decompression phase (to propagate results back to all nodes) is simplified, as our simulation outputs the maximum ID for the remaining node(s).
 
-How the MAX-ID Solver Works
-The MAX-ID algorithm computes the maximum node ID for each tree in a forest, enabling nodes to identify their connected component. Here’s how it works:
+## How the MAX-ID Solver Works?
 
-Initialization:
+The MAX-ID algorithm computes the maximum node ID for each tree in a forest, enabling nodes to identify their connected component. Here's how it works:
 
-Each node has a unique ID and a knowledge set ( S_v ) (initially its neighbors).
-Nodes track a max_id (initially their own ID).
+### Initialization
 
+Each node has a unique ID and a knowledge set (S_v), initially its neighbors.
 
-Compression Phases:
+Nodes track a max_id, initially their own ID.
 
-CompressLightSubTrees:
+### Compression Phases
+
+CompressLightSubTrees
+
 Nodes estimate subtree sizes and classify as:
-Happy: Has a “light” subtree (( \leq n^{\delta/8} ) nodes).
-Full: Knowledge set exceeds memory limit (( n^\delta )).
-Sad: Has multiple heavy subtrees.
 
+Happy: Has a "light" subtree (<= n^{delta/8} nodes).
+
+Full: Knowledge set exceeds memory limit (n^{delta}).
+
+Sad: Has multiple heavy subtrees.
 
 Happy nodes compress into full or sad neighbors, transferring their max_id and updating the graph.
 
+CompressPaths
 
-CompressPaths:
 Chains of degree-2 nodes are compressed into a single edge between their endpoints.
+
 The maximum max_id of the path is assigned to the endpoints.
 
+These phases reduce the tree's size while propagating the maximum ID.
 
-These phases reduce the tree’s size while propagating the maximum ID.
-
-
-Termination:
+### Termination
 
 The tree is reduced to a single node, whose max_id is the maximum ID of the tree.
+
 All nodes in the same tree (connected component) would output this max_id.
 
-
-Connected Components:
-
-Each tree in the forest is a connected component.
-By assigning the maximum ID to all nodes in a tree, nodes with the same max_id are identified as part of the same component.
-
-
-
-Example:
-
-Tree: 1 -- 2 -- 3 -- 4 -- 5.
-After compression (e.g., node 4 into 3, then 5 into 3, etc.), one node remains with max_id = 5.
-All nodes output 5, indicating they belong to the same connected component.
-
 Solving the Connected Components Problem
-The Connected Components Problem requires labeling each node in a graph with an identifier for its connected component. For forests:
+
+## The Connected Components Problem requires labeling each node in a graph with an identifier for its connected component. For forests:
 
 Each tree is a connected component.
+
 The MAX-ID algorithm assigns the maximum node ID of each tree to all its nodes.
+
 Nodes with the same max_id are in the same tree, solving the problem.
 
-This approach is efficient because:
+Example
+
+Tree: 1 -- 2 -- 3 -- 4 -- 5
+After compression (e.g., node 4 into 3, then 5 into 3, etc.), one node remains with max_id = 5. All nodes output 5, indicating they belong to the same connected component.
+
+### Efficiency
 
 Compression Reduces Size: The tree is reduced to a single node, minimizing computation.
+
 Maximum ID as Label: The unique maximum ID serves as a consistent component identifier.
-Scalability: In the theoretical MPC model, the algorithm runs in ( O(\log D) ) rounds (( D ) is the diameter), suitable for large graphs.
+
+Scalability: In the theoretical MPC model, the algorithm runs in O(log D) rounds (D is the diameter), suitable for large graphs.
 
 In our simulation, we output the max_id for the remaining node(s), simulating the result for all nodes in each tree.
-Why Simplify the MPC Model?
+
+## Why Simplify the MPC Model?
+
 The MPC model assumes:
 
-Independent machines with local memory (( O(n^\delta) )).
+Independent machines with local memory (O(n^{delta})).
+
 Synchronous communication rounds.
+
 No shared memory or multi-threading.
 
 Implementing this on a single machine or cluster is impractical because:
 
 Independent Machines: A single machine cannot replicate isolated MPC machines without complex virtualization.
+
 No GPU/Multi-threading: The MPC model prohibits shared-memory parallelism, ruling out GPU or multi-threaded optimizations.
+
 Synchronous Rounds: Simulating synchronized rounds on a cluster (e.g., with Dask) introduces overhead and variance.
 
 Instead, we use a single-threaded Python simulation to:
 
-Validate the algorithm’s logic.
+Validate the algorithm's logic.
+
 Test compression and MAX-ID computation on small graphs.
-Avoid the complexity of distributed systems while preserving the algorithm’s core functionality.
+
+Avoid the complexity of distributed systems while preserving the algorithm's core functionality.
+
+## Technical Details
 
 Language: Python
+
 Data Structures: Adjacency lists (dictionaries) and node objects for graph representation.
+
 Testing: Unit tests with synthetic graphs (paths, stars, random trees).
 
-Data
+## Data
 
 Synthetic forests of various sizes (e.g., 5 to 100 nodes) and structures (paths, stars, balanced trees).
+
 Graphs stored as dictionaries mapping node IDs to sets of neighbor IDs.
 
-Step-by-Step Implementation Plan
+## Step-by-Step Implementation Plan
 
-Graph Representation:
+### Graph Representation:
+
 Implement adjacency lists in Python dictionaries.
-Store node attributes (ID, ( S_v ), max_id, state) in a Node class.
 
+Store node attributes (ID, S_v, max_id, state) in a Node class.
 
-CompressLightSubTrees:
-Merge light subtrees based on ( n^{\delta/8} ) thresholds.
+### CompressLightSubTrees:
+
+Merge light subtrees based on n^{delta/8} thresholds.
+
 Update max_id and rewire the graph.
 
+### CompressPaths:
 
-CompressPaths:
 Compress chains of degree-2 nodes into single edges.
+
 Propagate maximum max_id to endpoints.
 
+### MAX-ID Simulation:
 
-MAX-ID Simulation:
 Reduce each tree to a single node with the maximum ID.
 
+### Testing and Validation:
 
-Testing and Validation:
 Test on synthetic graphs to verify correctness.
-
-
-
-
 
