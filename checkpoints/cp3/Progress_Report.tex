@@ -1,0 +1,68 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath,amsfonts,graphicx,hyperref}
+\usepackage[margin=1in]{geometry}
+
+\title{Implementation Progress Report: MAX-ID Algorithm for Finding Maximum Node ID in Trees}
+\author{Algorithms and Design Analysis}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{Implementation Summary}
+This project implements the MAX-ID algorithm as introduced in the paper \textit{"Optimal Deterministic Massively Parallel Connectivity on Forests"} by Balliu et al. The goal of the algorithm is to determine the maximum node ID in a tree through a parallel and memory-efficient approach.
+
+The implementation includes the entire MAX-ID algorithm:
+\begin{itemize}
+    \item Light and heavy node classification.
+    \item Subtree probing and controlled exponentiation.
+    \item CompressLightSubTrees and CompressPaths operations.
+    \item The main solve loop reduces the graph through phases.
+\end{itemize}
+
+All components have been implemented and thoroughly tested on three classes of trees: a path graph, a balanced binary tree, and a mixed star-like tree.
+
+\section*{Correctness Testing}
+Correctness was verified through structured test cases:
+\begin{itemize}
+    \item \textbf{Path Graph:} Ten nodes with increasing IDs tested to ensure the algorithm finds the terminal node as the max.
+    \item \textbf{Balanced Tree:} A binary tree where IDs increase with level; the leaf with the highest value is expected.
+    \item \textbf{Mixed Tree:} A star graph with deep branches tested the ability to find the maximum across varied subtrees.
+\end{itemize}
+
+Edge cases such as trees with a single node or only two nodes were also tested. Visualizations before and after the execution confirmed the correct behavior.
+
+\section*{Complexity \& Runtime Analysis}
+Theoretically, the algorithm runs in $O(\log \hat{D})$ rounds, where $\hat{D}$ is an upper bound on the diameter. Empirically, the runtime scaled well with small and medium-sized trees. The complexity they proposed in the start of the paper is guaranteed to work in $O(\log \hat{D})$ iterations for each subroutine/function in the MAX-ID solver, and we tried to run it for that many iterations at max(which is a naive approach). 
+
+No significant bottlenecks were encountered in small tests, though for larger graphs memory consumption grows due to the symmetric view propagation (doubling of state information). The \texttt{probe\_directions} and \texttt{exponentiate} functions dominate runtime.
+
+We could not confirm the algorithm's complexity that was proposed due to our constraints of not being able to mimic an MPC model although we did try using Dask.
+
+\section*{Baseline or Comparative Evaluation}
+Can not be compared to any previous implementation, as there is none. The paper introduces a theoretical framework and provides justification for it only.
+
+Ou
+
+\section*{Challenges \& Solutions}
+Key challenges included:
+\begin{itemize}
+    \item \textbf{Memory-bound View Expansion:} Resolved via directional probing and excluding heavy directions from exponentiation.
+    \item \textbf{Testing on Diverse Structures:} Addressed with helper graph generators and visualizations.
+    \item \textbf{No Previous Implementations} There no paper or repository that has implemented anything related to MPC models.
+    \item \textbf{MPC model:} The computational is completely different from normal parallel processing that we proposed with Dask in Python. We tried implementing however we ran several problems and as of yet of no solutions.
+\end{itemize}
+
+\section*{Enhancements}
+\subsection*{Modified Algorithm}
+We included a node state classification into \texttt{happy}, \texttt{sad}, \texttt{full}, and \texttt{active} to improve phase termination logic and memory safety(in accordance to memory constraints).
+
+\subsection*{Additional Datasets}
+The algorithm was tested on graph topologies not covered in the original paper to verified correctness.
+
+\subsection*{Other Enhancements}
+We added colored visualization of nodes pre- and post-compression to analyze convergence behavior. This was crucial in debugging sub tree compression and view expansion logic.
+
+\end{document}
+
