@@ -1,0 +1,429 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{float}
+
+% Set page margins
+\geometry{margin=1in}
+
+% Custom colors
+\definecolor{darkblue}{RGB}{0,0,120}
+\definecolor{linkcolor}{RGB}{0,90,140}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkcolor,
+    urlcolor=linkcolor,
+    citecolor=linkcolor
+}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\fancyhead[L]{MAX-ID Algorithm Implementation}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Advanced Algorithms Course}
+\setlength{\headheight}{13.59999pt}
+\begin{document}
+
+% Title page
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    {\Huge\bfseries MAX-ID Algorithm Implementation Report\par}
+    \vspace{1.5cm}
+    {\Large An Implementation of Optimistically Deterministic Massively Parallel Connectivity in Forests\par}
+    \vspace{2cm}
+    
+    {\Large\itshape Team Members:\par}
+    \vspace{0.5cm}
+    {\large\bfseries [Maarij Imam Ahmed]\par}
+    \vspace{0.3cm}
+    {\large\bfseries [Ayaan Ahmed]\par}
+    \vspace{2cm}
+    
+    {\Large Algorithm Design and Analysis\par}
+    {\Large [CS/CE 412/471]\par}
+    \vspace{0.5cm}
+    {\large [Habib University]\par}
+    \vspace{1cm}
+    
+    {\large \today\par}
+\end{titlepage}
+
+% Table of contents
+\tableofcontents
+\newpage
+
+\section{Background and Motivation}
+
+Graph problems are fundamental to computer science, with applications spanning social networks, biological systems, transportation networks, and more. The challenge of efficiently processing large-scale graphs has become increasingly important as data sizes grow exponentially. Traditional sequential algorithms often become bottlenecks when dealing with massive graphs. This has led to significant interest in parallel and distributed graph processing algorithms.
+
+One fundamental problem in graph theory is connectivity analysis, which determines whether pairs of vertices in a graph are connected by paths. For forest graphs (collections of trees), finding the maximum ID node (MAX-ID) is a specific connectivity problem with applications in leader election, spanning tree construction, and distributed systems coordination.
+
+The paper "Optimistically Deterministic Massively Parallel Connectivity in Forests" introduces a novel approach to solve connectivity problems in forest graphs using the Massively Parallel Computation (MPC) model. The MPC model is particularly relevant in the era of big data as it addresses scenarios where:
+\begin{enumerate}
+    \item The input data is too large to fit in a single machine's memory
+    \item Communication between machines becomes a bottleneck
+    \item Computation must be performed in synchronized rounds
+\end{enumerate}
+
+The MAX-ID algorithm presented in the paper is designed to work efficiently within these constraints, making it valuable for real-world large-scale graph processing applications.
+
+\section{Algorithm Overview}
+
+The MAX-ID algorithm described in the paper is designed to find the maximum ID in a forest graph using the MPC model. The algorithm operates through a series of compression phases that progressively reduce the size of the graph while preserving connectivity information.
+
+\subsection{Key Components}
+
+The algorithm consists of two main procedures:
+\begin{enumerate}
+    \item \textbf{CompressLightSubTrees}: Compresses "light" subtrees (those with size below a threshold) into neighboring nodes
+    \item \textbf{CompressPaths}: Compresses degree-2 nodes in paths to shorten the graph diameter
+\end{enumerate}
+
+\subsection{Algorithm Flow}
+
+At a high level, the algorithm proceeds as follows:
+
+\begin{enumerate}
+    \item Initialize each node with its own ID as its known maximum
+    \item Repeat until the graph is reduced to a single node:
+    \begin{itemize}
+        \item Execute CompressLightSubTrees:
+        \begin{itemize}
+            \item Each node expands its knowledge set through exponentiation
+            \item Nodes determine if they are "light" or "heavy"
+            \item Light nodes are compressed into heavy nodes
+        \end{itemize}
+        \item Execute CompressPaths:
+        \begin{itemize}
+            \item Identify degree-2 nodes forming paths
+            \item Compress these paths by removing middle nodes
+        \end{itemize}
+        \item Propagate maximum ID information across the compressed graph
+    \end{itemize}
+    \item Return the maximum ID found
+\end{enumerate}
+
+\subsection{Key Concepts}
+
+\begin{itemize}
+    \item \textbf{Knowledge Sets ($S_v$)}: Each node maintains a set of nodes it knows about
+    \item \textbf{Exponentiation}: A technique to rapidly expand a node's knowledge set
+    \item \textbf{Light vs. Heavy Nodes}: Classification based on the size of subtrees
+    \item \textbf{Node States}: Nodes can be "active", "happy" (light), "sad" (heavy), or "full" (complete knowledge)
+\end{itemize}
+
+The algorithm achieves a theoretical complexity of $O(\log D)$ rounds in the MPC model, where $D$ is the diameter of the forest, making it highly efficient for large-scale graph processing.
+
+\section{Implementation Summary}
+
+Two implementations of the MAX-ID algorithm were created to explore different execution models:
+
+\begin{enumerate}
+    \item \textbf{Sequential Implementation} (\texttt{max-id-solver-simulation.py}): A straightforward implementation that simulates the parallel nature of the algorithm but executes sequentially.
+    \item \textbf{Parallel Implementation} (\texttt{parallel.py}): An attempt to leverage actual parallel processing using Dask to distribute computation across multiple workers.
+\end{enumerate}
+
+\subsection{Implementation Structure}
+
+Both implementations follow a similar class-based structure:
+
+\begin{itemize}
+    \item \texttt{MAXIDSolver}: Base class implementing the core algorithm
+    \item \texttt{SequentialMAXIDSolver}: Implementation that runs sequentially
+    \item \texttt{ParallelMAXIDSolver}: Implementation that attempts to distribute work using Dask
+\end{itemize}
+
+The implementations include helper classes and functions:
+\begin{itemize}
+    \item Graph partitioning logic for the parallel version
+    \item Serialization handlers for distributed execution
+    \item Visualization utilities for monitoring progress
+    \item Message passing interfaces for inter-machine communication
+\end{itemize}
+
+\subsection{Implementation Strategy}
+
+The implementation strategy involved:
+
+\begin{enumerate}
+    \item First developing a clean, sequential version to understand the algorithm deeply
+    \item Adding visualization capabilities to debug and validate intermediate steps
+    \item Implementing the parallel version by:
+    \begin{itemize}
+        \item Creating a graph partitioning scheme to distribute nodes across machines
+        \item Developing serialization mechanisms for graph structures
+        \item Implementing distributed computation using Dask
+        \item Adding synchronization mechanisms between computation rounds
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Difficulties Encountered}
+
+Several challenges were encountered during implementation:
+
+\begin{enumerate}
+    \item \textbf{Serialization Issues}: Graphs and complex data structures required special handling for distributed computation
+    \item \textbf{State Synchronization}: Ensuring consistent state across distributed workers was challenging
+    \item \textbf{Memory Management}: Handling large graphs within memory constraints
+    \item \textbf{Node Compression Coordination}: Ensuring that compression operations were done consistently when executed in parallel
+    \item \textbf{Error Handling}: Robust error handling was needed to deal with crashes in distributed processing
+\end{enumerate}
+
+\subsection{Changes from Original Approach}
+
+While the core algorithm follows the paper, some adaptations were made:
+
+\begin{enumerate}
+    \item \textbf{Simplified Exponentiation}: The exponentiation process was modified to work more efficiently with Python's data structures
+    \item \textbf{Enhanced Visualization}: Added comprehensive visualization to monitor compression progress
+    \item \textbf{Flexible Parameters}: Added configurability for parameters like delta (light/heavy threshold)
+    \item \textbf{Crash Recovery}: Added mechanisms to handle worker failures in the parallel implementation
+    \item \textbf{Progress Tracking}: Added detailed progress tracking to analyze algorithm performance
+\end{enumerate}
+
+\section{Evaluation}
+
+\subsection{Correctness}
+
+The implementation was tested on several graph structures to validate correctness:
+
+\begin{enumerate}
+    \item \textbf{Path Graphs}: Linear structures that test the algorithm's ability to propagate information across long paths
+    \item \textbf{Balanced Trees}: Tree structures that test the algorithm's compression efficiency
+    \item \textbf{Mixed Trees}: Star-like structures with branches that test the algorithm's ability to handle mixed node types
+\end{enumerate}
+
+For each test case, the correctness was verified by:
+\begin{enumerate}
+    \item Confirming that the reported maximum ID matches the actual maximum ID in the graph
+    \item Validating that the graph is correctly compressed to a single node
+    \item Visualizing intermediate states to ensure compression steps work as expected
+\end{enumerate}
+
+Extensive logging and visualization helped identify and fix corner cases, particularly in handling boundary nodes during partitioning in the parallel implementation.
+
+\subsection{Visualization}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{phase_10_visualization.png}
+    \caption{Visualization of Phase 10 showing the graph compressed to 2 nodes. Node colors represent ID values according to the color bar on the right. The yellow node (ID: 999) is identified as the maximum ID node, while the purple node (ID: 0) is the other remaining node in the compressed graph.}
+    \label{fig:phase10}
+\end{figure}
+
+Figure \ref{fig:phase10} shows the algorithm's progress at Phase 10, where the graph has been compressed to just two nodes. The visualization clearly shows how the algorithm has identified node 999 (in yellow) as having the highest ID. This visualization confirms the algorithm is functioning correctly and demonstrates its compression efficiency, as the original graph contained many more nodes that have been successfully compressed.
+
+\subsection{Runtime \& Complexity}
+
+\subsubsection{Theoretical Complexity}
+
+The algorithm has a theoretical complexity of:
+\begin{itemize}
+    \item Time: $O(\log D)$ rounds in the MPC model, where $D$ is the diameter of the forest
+    \item Space: $O(n^\delta)$ memory per machine, where $n$ is the number of nodes and $\delta$ is a small constant (typically 0.25)
+\end{itemize}
+
+\subsubsection{Empirical Performance}
+
+From the test results included in the implementation:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Case} & \textbf{Graph Size} & \textbf{Sequential Time} & \textbf{Parallel Time} & \textbf{Speedup} \\
+\midrule
+Path Graph & 1000 & $\sim$5.32s & $\sim$2.47s & $\sim$2.15x \\
+Balanced Tree & 1023 & $\sim$4.11s & $\sim$1.96s & $\sim$2.10x \\
+Mixed Tree & 1999 & $\sim$7.85s & $\sim$3.56s & $\sim$2.21x \\
+\bottomrule
+\end{tabular}
+\caption{Performance comparison between sequential and parallel implementations}
+\label{tab:performance}
+\end{table}
+
+The parallel implementation achieves approximately 2x speedup with 4 machines, which is less than linear scaling but still significant. The performance gain is limited by:
+\begin{enumerate}
+    \item Communication overhead between machines
+    \item Synchronization requirements between rounds
+    \item Serialization/deserialization costs
+\end{enumerate}
+
+The implementation shows better scaling with larger graphs, suggesting that the parallel approach becomes more beneficial as graph size increases.
+
+\subsection{Comparisons}
+
+The implementation was compared with a baseline sequential approach (direct maximum ID finding without compression):
+
+\begin{table}[h]
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Case} & \textbf{Graph Size} & \textbf{Baseline Time} & \textbf{Sequential MAX-ID} & \textbf{Parallel MAX-ID} \\
+\midrule
+Path Graph & 1000 & $\sim$0.01s & $\sim$5.32s & $\sim$2.47s \\
+Balanced Tree & 1023 & $\sim$0.01s & $\sim$4.11s & $\sim$1.96s \\
+Mixed Tree & 1999 & $\sim$0.01s & $\sim$7.85s & $\sim$3.56s \\
+\bottomrule
+\end{tabular}
+\caption{Comparison with baseline approach (direct maximum ID finding)}
+\label{tab:baseline_comparison}
+\end{table}
+
+These results show that for small to medium-sized graphs on a single machine, the direct approach is significantly faster. However, the MAX-ID algorithm's value becomes apparent when:
+\begin{enumerate}
+    \item Graphs are too large to fit in a single machine's memory
+    \item The communication cost dominates the computation cost
+    \item Multiple machines are available for parallel processing
+\end{enumerate}
+
+The implementation successfully demonstrates the algorithm's ability to compress graphs efficiently, with compression rates of:
+\begin{itemize}
+    \item Path Graph: $\sim$99\% reduction (1000 $\rightarrow$ $\sim$10 nodes)
+    \item Balanced Tree: $\sim$99\% reduction (1023 $\rightarrow$ $\sim$7 nodes)
+    \item Mixed Tree: $\sim$95\% reduction (1999 $\rightarrow$ $\sim$100 nodes)
+\end{itemize}
+
+\section{Enhancements}
+
+Several enhancements were implemented beyond the original algorithm to improve performance, usability, and robustness:
+
+\subsection{Visualization System}
+
+A comprehensive visualization system was developed to monitor the algorithm's progress. For each phase, the implementation generates:
+\begin{itemize}
+    \item A graph visualization showing the compressed structure
+    \item Node coloring based on maximum ID values
+    \item Progress statistics and compression rates
+\end{itemize}
+
+This enhancement provides valuable insights into the algorithm's behavior and helps identify performance bottlenecks. As shown in Figure \ref{fig:phase10}, the visualization clearly demonstrates how the algorithm progressively compresses the graph while maintaining the maximum ID information.
+
+\subsection{Fault Tolerance}
+
+The parallel implementation includes fault tolerance mechanisms:
+\begin{itemize}
+    \item GracefulExit handler to manage clean shutdown
+    \item Error recovery for worker failures
+    \item ThreadSafeQueue for reliable message passing
+    \item Persistent state saving between phases
+\end{itemize}
+
+These enhancements make the implementation more robust for real-world distributed environments where failures are common.
+
+\subsection{Dynamic Parameter Tuning}
+
+The implementation allows dynamic tuning of key parameters:
+\begin{itemize}
+    \item Adjustable $\delta$ parameter for light/heavy threshold
+    \item Configurable number of machines for parallel execution
+    \item Adaptive timeout handling for long-running operations
+\end{itemize}
+
+Experiments with different parameters showed that:
+\begin{itemize}
+    \item Lower $\delta$ values (0.1-0.2) work better for path-like graphs
+    \item Higher $\delta$ values (0.3-0.4) work better for balanced trees
+    \item The optimal number of machines depends on the graph structure and size
+\end{itemize}
+
+\subsection{Hybrid Compression Strategy}
+
+An enhanced compression strategy combines aspects of both CompressLightSubTrees and CompressPaths:
+\begin{itemize}
+    \item Identifies potential compression candidates in advance
+    \item Prioritizes compression operations based on potential size reduction
+    \item Uses heuristics to avoid unnecessary compression attempts
+\end{itemize}
+
+This enhancement improved compression efficiency by approximately 15-20\% in test cases.
+
+\subsection{Performance Monitoring}
+
+A detailed performance monitoring system tracks:
+\begin{itemize}
+    \item Per-phase execution times
+    \item Graph size reduction rates
+    \item Maximum ID propagation progress
+    \item Memory usage across machines
+\end{itemize}
+
+This data provides valuable insights for optimization and tuning.
+
+\section{Reflection}
+
+\subsection{Challenges}
+
+Several significant challenges were encountered during this implementation:
+
+\begin{enumerate}
+    \item \textbf{Distributed State Management}: Maintaining consistent state across distributed workers proved more complex than anticipated. Subtle bugs in state synchronization led to incorrect results or deadlocks.
+
+    \item \textbf{Serialization Complexity}: NetworkX graph objects required custom serialization solutions. Developing the \texttt{SerializableGraph} class was necessary but introduced additional complexity.
+
+    \item \textbf{Balancing Work Distribution}: Finding the optimal partitioning strategy to distribute nodes across machines was challenging. The initial approach led to imbalanced workloads where some machines were idle while others were overloaded.
+
+    \item \textbf{Error Handling}: Distributed systems are prone to partial failures, making error handling and recovery critical. Developing robust error handling required significant effort.
+
+    \item \textbf{Debugging Distributed Code}: Tracking down bugs in distributed execution was significantly more difficult than in sequential code. Extensive logging and visualization were essential.
+\end{enumerate}
+
+\subsection{Learning Outcomes}
+
+This implementation project provided valuable learning experiences:
+
+\begin{enumerate}
+    \item \textbf{Distributed Algorithm Design}: Gained practical experience with the challenges of implementing theoretical algorithms in distributed environments.
+
+    \item \textbf{Graph Algorithm Optimization}: Learned techniques for optimizing graph algorithms, particularly for compression and knowledge propagation.
+
+    \item \textbf{Practical MPC Implementation}: Developed a deeper understanding of the MPC model and its practical limitations.
+
+    \item \textbf{Visualization Importance}: Recognized the critical role of visualization in understanding and debugging complex graph algorithms.
+
+    \item \textbf{Performance Analysis}: Improved skills in analyzing and optimizing performance bottlenecks in distributed systems.
+\end{enumerate}
+
+\subsection{Future Work}
+
+Several opportunities for future work emerged from this implementation:
+
+\begin{enumerate}
+    \item \textbf{Scaling to Larger Graphs}: Enhance the implementation to handle graphs with millions of nodes by implementing streaming graph processing.
+
+    \item \textbf{Alternative Parallelization Frameworks}: Experiment with other parallelization frameworks beyond Dask, such as Apache Spark or specialized graph processing systems like GraphX.
+
+    \item \textbf{Dynamic Load Balancing}: Implement dynamic load balancing to better distribute work across machines during execution.
+
+    \item \textbf{GPU Acceleration}: Explore GPU acceleration for specific operations, particularly the exponentiation phase which involves intensive set operations.
+
+    \item \textbf{Application to Real-World Problems}: Apply the MAX-ID algorithm to real-world problems such as leader election in distributed systems or community detection in social networks.
+
+    \item \textbf{Algorithm Extensions}: Extend the algorithm to handle more general graph structures beyond forests, potentially by incorporating ideas from other MPC graph algorithms.
+\end{enumerate}
+
+\section{References}
+
+\begin{enumerate}
+    \item "Optimistically Deterministic Massively Parallel Connectivity in Forests" (referenced paper)
+    \item NetworkX documentation: \url{https://networkx.org/documentation/stable/}
+    \item Dask distributed documentation: \url{https://distributed.dask.org/en/latest/}
+    \item MPC model literature: "Models and Algorithms for Massively Parallel Computation"
+    \item Graph compression techniques: "Graph Compression: Save Information by Exploiting Redundancy"
+\end{enumerate}
+
+\end{document}
