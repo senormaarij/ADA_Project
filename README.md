@@ -181,9 +181,10 @@ To run the MAX-ID solver implementation, follow these steps:
    cd src
    ```
 2. Install the required dependencies:
-  ```bash
-  pip install -r requirements.txt
-  ```
+   
+   ```bash
+   pip install -r requirements.txt
+   ```
 ### Running the code:
 You can run the implementation using the following commands:
 
