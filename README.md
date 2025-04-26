@@ -166,3 +166,40 @@ Reduce each tree to a single node with the maximum ID.
 
 Test on synthetic graphs to verify correctness.
 
+## How to Run the Code
+
+To run the MAX-ID solver implementation, follow these steps:
+
+### Prerequisites
+- Python 3.6 or higher
+- pip (Python package installer)
+
+### Setup and Installation
+
+1. Navigate to the project's source directory:
+   ```bash
+   cd src
+   ```
+2. Install the required dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+### Running the code:
+You can run the implementation using the following commands:
+
+### MAX-ID Solver Simulation
+This is the main implementation of the MAX-ID algorithm for connected components in forests:
+```bash
+python max-id-solver-simulation.py
+```
+
+### Parallel Simulation:
+Run the parallel version of the implementation:
+
+```bash
+python parallel.py
+```
+
+### Example Usage:
+
+The MAX-ID solver will run on the synthetic graphs defined in the code and output the maximum ID for each connected component. The output will show the progression of the algorithm through the compression phases and the final maximum ID assignment for each node.
